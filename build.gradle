@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.ohussar'
+version = '1.0-SNAPSHOT'
+apply plugin: 'application'
+apply plugin: 'idea'
+mainClassName = 'com.ohussar.VoxelEngine.Main'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    implementation fileTree('libs') {include '*.jar'}
+}
+
+test {
+    useJUnitPlatform()
+}

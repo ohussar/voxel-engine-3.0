@@ -1,0 +1,25 @@
+#version 400 core
+
+in int compressedData;
+out vec4 pass_textureCoords;
+uniform mat4 transformationMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+
+void main(void){
+
+    vec3 position = vec3(compressedData & 31, ((compressedData) >> 5) & 511, (compressedData >> 14) & 31);
+    int normal = (compressedData >> 19) & 3;
+    int texture = (compressedData >> 21) & 0xFF;
+
+
+    gl_Position = projectionMatrix * viewMatrix * transformationMatrix * vec4(position.xyz, 1.0);
+
+    pass_textureCoords = vec4(position.x, position.z, texture, 0);
+    if(normal == 1){
+        pass_textureCoords = vec4(-position.z, -position.y, texture, 1);
+    }
+    if(normal == 2){
+        pass_textureCoords = vec4(position.x, -position.y, texture, 2);
+    }
+}
