@@ -59,6 +59,18 @@ public class MemoryLoader {
         GL30.glBindVertexArray(0);
         return VAO;
     }
+    public int updateVAO(int VAO, int[] compressedData, float[] screenSize){
+        if(VAO == -1){
+            VAO = createVAO();
+        }else{
+            GL30.glDeleteVertexArrays(VAO);
+            VAO = createVAO();
+        }
+        storeDataInAttributeList(compressedData, 0, 1);
+        storeDataInAttributeList(screenSize, 1, 2);
+        GL30.glBindVertexArray(0);
+        return VAO;
+    }
 
     private int createVAO() {
 

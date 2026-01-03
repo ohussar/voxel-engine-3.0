@@ -15,6 +15,9 @@ public class BlockTypes {
     public static final BlockType DIRT = new BlockType(0,  new AllSideGetter("dirt"));
     public static final BlockType STONE = new BlockType(1, new AllSideGetter("stone"));
     public static final BlockType GRASS = new BlockType(2, new GrassTextureGetter());
+    public static final BlockType SAND = new BlockType(3, new AllSideGetter("sand"));
+    public static final BlockType LOG = new BlockType(4, new PillarTextureGetter("log_side", "log_vertical"));
+    public static final BlockType LEAVES = new BlockType(5, new AllSideGetter("leaves"));
     public static class BlockType {
 
         public final int id;
@@ -61,6 +64,21 @@ public class BlockTypes {
             }
 
             return TextureArray.getTextureWorld(TOP);
+        }
+    }
+    public static class PillarTextureGetter implements TextureSideGetter{
+        public final String SIDES;
+        public final String VERTICAL;
+        public PillarTextureGetter(String sides, String vertical){
+            this.SIDES = sides;
+            this.VERTICAL = vertical;
+        }
+        @Override
+        public int getTextureIdForSide(int side) {
+            if(side == 2 || side == 3 || side == 4 || side == 5){
+                return TextureArray.getTextureWorld(SIDES);
+            }
+            return TextureArray.getTextureWorld(VERTICAL);
         }
     }
 

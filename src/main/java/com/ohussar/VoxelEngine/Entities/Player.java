@@ -4,6 +4,7 @@ import com.ohussar.VoxelEngine.Keyboard;
 import com.ohussar.VoxelEngine.Main;
 import com.ohussar.VoxelEngine.Util.Maths;
 import com.ohussar.VoxelEngine.Util.Util;
+import com.ohussar.VoxelEngine.World.Block;
 import com.ohussar.VoxelEngine.World.World;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.util.vector.Vector3f;
@@ -13,17 +14,17 @@ public class Player {
     private int VAO = -1;
     private int vertexCount = 0;
     public Vector3f position;
-    public float speed = 0.075f;
+    public float speed = 0.035f;
     public Vector3f velocity;
     public Vector3f[] boundingBox = {
             new Vector3f(0.7f, 0, 0.7f),
             new Vector3f(0.7f, 0, 0.2f),//
             new Vector3f(0.2f, 0, 0.7f),
             new Vector3f(0.2f, 0, 0.2f),//
-            new Vector3f(0.7f, 1.3f, 0.7f),
-            new Vector3f(0.7f, 1.3f, 0.2f),//
-            new Vector3f(0.2f, 1.3f, 0.7f),
-            new Vector3f(0.2f, 1.3f, 0.2f),//
+            new Vector3f(0.7f, 1.75f, 0.7f),
+            new Vector3f(0.7f, 1.75f, 0.2f),//
+            new Vector3f(0.2f, 1.75f, 0.7f),
+            new Vector3f(0.2f, 1.75f, 0.2f),//
     };
     private boolean isGrounded = false;
 
@@ -57,13 +58,13 @@ public class Player {
     }
 
     public void tick(World world, Camera camera){
-        //this.velocity.translate(0, -0.01f, 0);
-        if(Keyboard.isKeyDown(GLFW.GLFW_KEY_SPACE)){
-            this.velocity.y = 0.1f;
+        this.velocity.translate(0, -0.01f, 0);
+        if(Keyboard.isKeyDown(GLFW.GLFW_KEY_SPACE) && isGrounded){
+            this.velocity.y = 0.165f;
         }else if(Keyboard.isKeyDown(GLFW.GLFW_KEY_LEFT_CONTROL)){
-            this.velocity.y = -0.1f;
+            //this.velocity.y = -0.1f;
         }else{
-            this.velocity.y = 0.0f;
+            //this.velocity.y = 0.0f;
         }
 
 
@@ -96,13 +97,26 @@ public class Player {
         }
     }
 
+    public boolean isInside(World world, Block block){
+        for (Vector3f point : boundingBox){
+            Vector3f actualPos = new Vector3f(this.position.x + point.x, this.position.y + point.y, this.position.z + point.z);
+            if(world.getBlock(actualPos) != null ){
+                Block b = world.getBlock(actualPos);
+                if(b == block){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     public void move(Camera camera){
         float mat = 0f;
         float hor = 0;
 
         if(Keyboard.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)){
-            speed = 0.2f;
+            speed = 0.100f;
         }else{
             speed = 0.075f;
         }

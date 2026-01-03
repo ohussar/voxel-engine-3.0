@@ -9,6 +9,7 @@ public class UIShader extends ShaderProgram{
     private static final String fragmentFile = "src/main/java/com/ohussar/VoxelEngine/Shaders/UifragmentShader.txt";
     int location_projectionMatrix;
     int location_TranslationMatrix;
+    public int sampler2D;
     int location_depth;
     public UIShader() {
         super(vertexFile, fragmentFile);
@@ -19,6 +20,7 @@ public class UIShader extends ShaderProgram{
         // get uniform ids from shader for later access
         location_projectionMatrix = super.getUniformLocation("projectionMatrix");
         location_TranslationMatrix = super.getUniformLocation("translationMatrix");
+        sampler2D = super.getUniformLocation("textureSampler");
     }
 
     public void connectToTextures(){

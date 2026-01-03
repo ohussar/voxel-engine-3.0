@@ -1,6 +1,7 @@
 package com.ohussar.VoxelEngine.World;
 
 import com.ohussar.VoxelEngine.Main;
+import org.lwjgl.opengl.GL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,6 @@ public class ChunkMeshData {
         this.positionList = new ArrayList<>();
         this.blockTypeList = new ArrayList<>();
         this.normalList = new ArrayList<>();
-        VAO = Main.StaticLoader.updateVAO(VAO, new float[]{}, new byte[]{});
+        //VAO = Main.StaticLoader.updateVAO(VAO, new float[]{}, new byte[]{});
     }
 }

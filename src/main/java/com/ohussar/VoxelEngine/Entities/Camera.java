@@ -6,6 +6,7 @@ import com.ohussar.VoxelEngine.Textures.TextureArray;
 import com.ohussar.VoxelEngine.Util.Vec3i;
 import com.ohussar.VoxelEngine.World.Block;
 import com.ohussar.VoxelEngine.World.BlockTypes;
+import org.lwjgl.Sys;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class Camera {
 
 
     public int VAOBlockSelect = -1;
-
+    public Block selectedBlock = null;
 
     public int VAO = -1;
 
@@ -37,12 +38,6 @@ public class Camera {
     }
 
     public void tick() {
-        Vector3f future = new Vector3f(this.position.x, this.position.y + this.momentum.y - 1, this.position.x);
-        Block toMeet = Main.world.getBlock(future);
-        if(toMeet != null){
-            this.momentum.y *= -0.7f;
-        }
-
         if (Mouse.isButtonDown(1) && !mouse1) {
             mouse1 = true;
             placeBlock();
@@ -63,43 +58,11 @@ public class Camera {
 
 
         Block block = raycastFromCameraRotation();
-        if(block != null){
-            Vector3f[][] vertexes = {PY_POS, NY_POS, PX_POS, NX_POS, PZ_POS, NZ_POS};
-            List<Integer> positions = new ArrayList<>();
-            List<Byte> textureId = new ArrayList<>();
-            List<Byte> normal = new ArrayList<>();
-            int vertexCount = 0;
-            for(int d = 0; d < 6; d++){
-                for(int f = 0; f < 6; f++){
-                    positions.add((int)vertexes[d][f].x);
-                    positions.add((int)vertexes[d][f].y);
-                    positions.add((int)vertexes[d][f].z);
-                    normal.add((byte) (d/2));
-                    textureId.add((byte) TextureArray.getTextureWorld("outline"));
-                    vertexCount += 1;
-                }
-            }
-            int[] compressedData = new int[vertexCount];
-            for(int i = 0; i < positions.size(); i+=3){
-                int x =  positions.get(i); // 0 a 16
-                int y =  positions.get(i+1); // 0 a 255
-                int z =  positions.get(i+2); // 0 a 16
-                compressedData[i/3] = (x&31) | ((y&511) << 5) | ((z&31) << 14);
-            }
-            for(int i = 0; i < vertexCount; i++){
-                int normalA = normal.get(i) & 3; // 00, 01, 10
-                int texture = textureId.get(i) & 0xFF;
-                compressedData[i] = compressedData[i] | (normalA << 19) | (texture << 21);
-            }
-            VAOBlockSelect = Main.StaticLoader.updateVAO(VAOBlockSelect, compressedData);
-            //System.out.println(block.position.toString());
-            Main.renderer.renderBlock(VAOBlockSelect, Main.StaticShader, block.position.translate(-0.505f, -0.505f, -0.505f), vertexCount);
-        }
-
+        selectedBlock = block;
 
         rotation.x += 0.4f*-Mouse.getDY();
         rotation.y += 0.4f*Mouse.getDX();
-        this.position.translate(momentum.x, momentum.y, momentum.z);
+        //this.position.translate(momentum.x, momentum.y, momentum.z);
     }
 
     public void placeBlock(){
@@ -119,6 +82,12 @@ public class Camera {
          Vec3i previousPos = new Vec3i(0, 0, 0);
 
         float delta = 1 - (float) Math.sqrt((Math.abs(Math.sin(Math.toRadians(rotation.getX())))));
+        Vec3i playerPos =  new Vec3i(Math.round(Main.player.position.getX()),
+                Math.round(Main.player.position.getY()),
+                Math.round(Main.player.position.getZ()));
+        Vec3i playerPos1 = new Vec3i(Math.round(Main.player.position.getX()),
+                Math.round(Main.player.position.getY()) + 1,
+                Math.round(Main.player.position.getZ()));
         while (i < maxSteps) {
             i++;
             float beforeX = xx;
@@ -128,6 +97,7 @@ public class Camera {
             yy += dy;
             zz += dz;
             Vec3i pos = new Vec3i(new Vector3f((int) Math.round(xx), (int) Math.round(yy), (int) Math.round(zz)));
+
             if (!previousPos.equals(pos)) {
                 previousPos = pos;
                 Block block = Main.world.getBlock(pos.toVec3f());
@@ -136,6 +106,15 @@ public class Camera {
                     Block block1 = Main.world.getBlock(ray1.toVec3f());
                     if(block1 != null){
                         Vec3i newPos = ray1.translate(-(int)Math.signum(dx), 0,0);
+                        System.out.println(newPos);
+                        System.out.println(playerPos);
+                        System.out.println(playerPos1);
+
+                        if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
+
+                            break;
+                        }
+
                         Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE.id));
                         break;
                     }
@@ -143,6 +122,9 @@ public class Camera {
                     Block block2 = Main.world.getBlock(ray2.toVec3f());
                     if(block2 != null){
                         Vec3i newPos = ray2.translate(0, -(int)Math.signum(dy),0);
+                        if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
+                            break;
+                        }
                         Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE.id));
                         break;
                     }
@@ -150,6 +132,9 @@ public class Camera {
                     Block block3 = Main.world.getBlock(ray3.toVec3f());
                     if(block3 != null){
                         Vec3i newPos = ray3.translate(0, 0,-(int)Math.signum(dz));
+                        if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
+                            break;
+                        }
                         Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE.id));
                         break;
                     }

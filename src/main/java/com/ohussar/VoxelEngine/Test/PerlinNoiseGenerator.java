@@ -7,7 +7,7 @@ public class PerlinNoiseGenerator {
     public static float AMPLITUDE = 45f;
     public static int OCTAVES = 7;
     public static float ROUGHNESS = 0.4f;
-
+    public float AMP = -1.0f;
     private Random random = new Random();
     private int seed;
     private int xOffset = 0;
@@ -15,6 +15,10 @@ public class PerlinNoiseGenerator {
 
     public PerlinNoiseGenerator() {
         this.seed = 0;
+    }
+    public PerlinNoiseGenerator(int seed, float amplitude) {
+        this.seed = seed;
+        AMP = amplitude;
     }
 
     //only works with POSITIVE gridX and gridZ values!
@@ -33,11 +37,17 @@ public class PerlinNoiseGenerator {
         float d = (float) Math.pow(2, OCTAVES-1);
         for(int i=0;i<OCTAVES;i++){
             float freq = (float) (Math.pow(2, i) / d);
-            float amp = (float) Math.pow(ROUGHNESS, i) * AMPLITUDE;
+            float amp = 1.0f;
+            if(AMP != -1f){
+                amp = (float) Math.pow(ROUGHNESS, i) * AMP;
+            }else{
+                amp = (float) Math.pow(ROUGHNESS, i) * AMPLITUDE;
+            }
+
             total += getInterpolatedNoise((x+xOffset)*freq, (z + zOffset)*freq) * amp;
         }
 
-        return (float) (int) total;
+        return total;
 
     }
 
@@ -82,6 +92,44 @@ public class PerlinNoiseGenerator {
         }
         random.setSeed(Math.abs(x) * (49632 + factorx) + Math.abs(z) * (325176+factorz) + seed);
         return random.nextFloat() * 2f - 1f;
+    }
+
+    public float getNoiseT(int x, int z) {
+        int factorx = 0;
+        if(x < 0){
+            //factorx = 3210;
+        }
+        int factorz = 0;
+        if(z < 0){
+            //factorz = 1200;
+        }
+        random.setSeed(x * (49632L + factorx) + z * (325176L+factorz) + seed);
+        return random.nextFloat() * 2f - 1f;
+    }
+    public long hashCoordinates(int x, int y) {
+        // Use large prime numbers for better distribution and mix the bits.
+        // Bitwise operations (XOR, shifts) help "complexify" the hash.
+        long seed = 1664525L * x + 1013904223L;
+        seed = seed ^ (seed >> 16);
+        seed += 1013904223L * y;
+        seed = seed ^ (seed >> 16);
+        seed *= 0x5DEECE66DL; // The multiplier used in Java's built-in Random class
+        seed += 0xBL;          // The adder used in Java's built-in Random class
+        return seed;
+    }
+
+    /**
+     * Generates a repeatable pseudorandom float value between 0.0 and 1.0
+     * for a given (x, y) coordinate pair.
+     */
+    public float getNoiseValue(int x, int y) {
+        // Use the hash result as the seed for a *new* Random object.
+        // This ensures the result depends ONLY on the input (x, y) coordinates.
+        long seed = hashCoordinates(x, y);
+        Random rand = new Random(seed);
+
+        // Use nextFloat() to get a value in the range [0.0, 1.0)
+        return rand.nextFloat();
     }
 
 

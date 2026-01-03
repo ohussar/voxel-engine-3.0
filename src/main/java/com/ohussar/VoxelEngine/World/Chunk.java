@@ -12,21 +12,19 @@ import static com.ohussar.VoxelEngine.Entities.Cube.*;
 
 public class Chunk {
 
-    private static final int CHUNK_SIZE_X = 16;
+    public static final int CHUNK_SIZE_X = 16;
     public static final int CHUNK_SIZE_Y = 256;
-    private static final int CHUNK_SIZE_Z = 16;
-
+    public static final int CHUNK_SIZE_Z = 16;
+    public int compressedDataStored[];
     private Block[] CHUNK_BLOCKS = new Block[CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z];
-
+    public boolean meshGenerated = false;
     private final Vector3f position;
 
     public final ChunkMeshData meshData;
 
     public Chunk(Vector3f position){
         this.position = position;
-
         this.meshData = new ChunkMeshData();
-
     }
 
     public Vector3f getPosition(){
@@ -67,7 +65,7 @@ public class Chunk {
         CHUNK_BLOCKS[y * CHUNK_SIZE_X + x + z * (CHUNK_SIZE_X * CHUNK_SIZE_Y)] = block;
     }
 
-    public void buildMesh() {
+    public void prepareMesh(){
         Map<Vector3f, Boolean> meshed = new HashMap<>();
         meshData.verticesCount = 0;
         Vector3f[][] vertexes = {PY_POS, NY_POS, PX_POS, NX_POS, PZ_POS, NZ_POS};
@@ -79,6 +77,7 @@ public class Chunk {
                     int finish_z = start_z;
                     int start_x = x;
                     int finish_x = start_x;
+
 
                     Block block = getBlockAtPos(start_x, y, start_z);
                     if(block != null && !meshed.containsKey(block.position)){
@@ -173,9 +172,15 @@ public class Chunk {
             int texture = meshData.blockTypeList.get(i) & 0xFF;
             compressedData[i] = compressedData[i] | (normal << 19) | (texture << 21);
         }
-        meshData.VAO = Main.StaticLoader.updateVAO(meshData.VAO, compressedData);
+        compressedDataStored = compressedData;
+        meshGenerated = false;
+    }
+
+    public void buildMesh() {
+        meshData.VAO = Main.StaticLoader.updateVAO(meshData.VAO, compressedDataStored);
         meshData.normalList.clear();
         meshData.blockTypeList.clear();
         meshData.positionList.clear();
+        meshGenerated = true;
     }
 }

@@ -16,6 +16,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.lwjgl.opengl.GL13.GL_TEXTURE1;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+
 public class TextureArray {
 
     public static int worldId = -1;
@@ -29,11 +32,41 @@ public class TextureArray {
     }
 
     public static void loadUITextures(){
-        uiId = GL11.glGenTextures();
-        GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, uiId);
+        //uiId = GL11.glGenTextures();
+
         String folder = "src/main/resources/UI/";
-        loadTextures(folder, uiTextureMap);
-        GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, 0);
+        Set<String> files = Stream.of(Objects.requireNonNull(new File(folder).listFiles())).map(File::getName).collect(Collectors.toSet());
+        glActiveTexture(GL_TEXTURE1);
+        for(String file : files){
+            if(new File(folder + file).isDirectory()){
+                continue;
+            }
+            BufferedImage image = null;
+            try {
+                image = ImageIO.read(new File(folder + file));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if(image.getData().getDataBuffer() instanceof DataBufferByte e){
+                byte[] pixels = e.getData();
+                ByteBuffer buffer = ByteBuffer.allocateDirect(image.getData().getDataBuffer().getSize());
+                byte[] corrected = convertAbgrToRgba(pixels);
+                buffer.put(corrected);
+                buffer.position(0);
+
+                int texId = GL11.glGenTextures();
+                GL11.glBindTexture(GL30.GL_TEXTURE_2D, texId);
+                System.out.println(texId);
+                GL12.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+
+                uiTextureMap.put(file.split(".png")[0],
+                        new Texture(image.getWidth(), image.getHeight(), texId, file.split(".png")[0]));
+                //GL12.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, iteration, image.getWidth(), image.getHeight(), 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+                GL11.glBindTexture(GL30.GL_TEXTURE_2D, 0);
+            }
+        }
+        //loadTextures(folder, uiTextureMap);
+
     }
 
     public static void loadWorldTextures(){
@@ -48,6 +81,7 @@ public class TextureArray {
     private static void loadTextures(String folder, Map<String, Texture> map){
         Set<String> files = Stream.of(Objects.requireNonNull(new File(folder).listFiles())).map(File::getName).collect(Collectors.toSet());
         GL42.glTexStorage3D(GL30.GL_TEXTURE_2D_ARRAY, 1, GL11.GL_RGBA8,  16, 16, files.size());
+
         int iteration = 0;
         for(String file : files){
             if(new File(folder + file).isDirectory()){
@@ -65,7 +99,6 @@ public class TextureArray {
                 byte[] corrected = convertAbgrToRgba(pixels);
                 buffer.put(corrected);
                 buffer.position(0);
-                System.out.println(iteration);
                 GL12.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, iteration, image.getWidth(), image.getHeight(), 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
                 map.put(file.split(".png")[0],
                         new Texture(image.getWidth(), image.getHeight(), iteration, file.split(".png")[0]));

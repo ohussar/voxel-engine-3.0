@@ -75,6 +75,11 @@ public class UIRenderer {
     public void renderSprite(String sprite, float x, float y){
         int VAO = VAO_TEXTURES.get(sprite);
         Texture tex = TextureArray.getUiTextureMap().get(sprite);
+        GL11.glBindTexture(GL30.GL_TEXTURE_2D, tex.id);
+        glUniform1i(uiShader.sampler2D, 1);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
         Matrix4f view = createTranslationMatrix(x, y, tex.width, tex.height);
         uiShader.loadTranslationMatrix(view);
         uiShader.loadProjectionMatrix(projectionMatrix);
@@ -90,14 +95,11 @@ public class UIRenderer {
 
     public void render(){
         uiShader.start();
-        glActiveTexture(GL_TEXTURE0);
-        GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, TextureArray.uiId);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        renderSprite("reference", 0, 0);
-        renderSprite("reference2", 16, 0);
-        renderSprite("reference3", 32, 0);
-
+        glActiveTexture(GL_TEXTURE1);
+        GL11.glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        renderSprite("crosshair", Main.config.getWidth()/(2f*scale), Main.config.getHeight()/(2f*scale));
+        GL11.glDisable(GL_BLEND);
         uiShader.stop();
     }
 
