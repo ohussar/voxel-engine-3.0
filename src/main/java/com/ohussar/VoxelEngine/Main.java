@@ -16,6 +16,8 @@ import imgui.app.Application;
 import imgui.app.Configuration;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL33;
+import org.lwjgl.opengl.GL43;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.util.ArrayList;
@@ -154,27 +156,24 @@ public class Main extends Application {
         long cullingEndTime = System.nanoTime() - cullingStartTime;
 
         long renderStartTime = System.nanoTime();
+        long timeTaken[] = {0};
+//        int query = GL33.glGenQueries();
+//        GL33.glBeginQuery(GL33.GL_TIME_ELAPSED, query);
         for(World.ChunkDist chunkDist : chunkDistList){
             renderer.renderChunk(chunkDist.chunk, StaticShader, null);
         }
-
-        long renderTime =  System.nanoTime() - renderStartTime;
+//        GL33.glEndQuery(GL33.GL_TIME_ELAPSED);
+//        GL43.glGetQueryObjectui64v(query, GL33.GL_QUERY_RESULT, timeTaken);
+//        GL33.glDeleteQueries(query);
+        long renderTime =  timeTaken[0];
 
 
         Keyboard.keyPressedLoopRegister(GLFW.GLFW_KEY_ESCAPE);
         Keyboard.keyPressedLoopRegister(GLFW.GLFW_KEY_SPACE);
         Keyboard.keyPressedLoopRegister(GLFW.GLFW_KEY_E);
-        if(Keyboard.isKeyPressed(GLFW.GLFW_KEY_E)){
-            renderer.renderMesh = !renderer.renderMesh;
-        }
-        if(Keyboard.isKeyPressed(GLFW.GLFW_KEY_ESCAPE)) {
-            isImGUI = !isImGUI;
-            if(isImGUI) {
-                GLFW.glfwSetInputMode(main.getHandle(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
-            }else{
-                GLFW.glfwSetInputMode(main.getHandle(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-            }
-        }
+//        if(Keyboard.isKeyPressed(GLFW.GLFW_KEY_E)){
+//            renderer.renderMesh = !renderer.renderMesh;
+//        }
         if(camera.selectedBlock != null){
             Main.renderer.drawBlockOutline(camera.selectedBlock.position);
         }
@@ -183,14 +182,11 @@ public class Main extends Application {
         uiRenderer.render();
         Mouse.lastX = 0;
         Mouse.lastY = 0;
-        if(isImGUI) {
-            ImGui.sliderFloat("translacao", slider, 0f, 1280-64);
-        }
         double totaltime = (System.nanoTime() - startTime)/1000000000d;
         frameNumber++;
         frameTime += totaltime;
-        cullingTime += (double) TimeUnit.NANOSECONDS.toMillis(cullingEndTime);
-        renderTimeA += (double) TimeUnit.NANOSECONDS.toMillis(renderTime);
+        cullingTime += (double) cullingEndTime/1000000d;
+        renderTimeA += (double) renderTime/1000000d;
 
         ImGui.begin("Info");
         ImGui.setWindowSize(300, 200);

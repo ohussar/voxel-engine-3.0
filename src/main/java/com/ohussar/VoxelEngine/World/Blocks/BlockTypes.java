@@ -19,7 +19,7 @@ public class BlockTypes {
     public static final BlockType GRASS = new BlockType(2, new GrassTextureGetter());
     public static final BlockType SAND = new BlockType(3, new AllSideGetter("sand"));
     public static final BlockType LOG = new BlockType(4, new PillarTextureGetter("log_side", "log_vertical"));
-    public static final BlockType LEAVES = new BlockType(5, new AllSideGetter("leaves"), true,true, false);
+    public static final BlockType LEAVES = new BlockType(5, new AllSideGetter("leaves"), true,true, false).setFaceCull(false);
     public static final BlockType WATER = new WaterBlockType(6);
 
     public static class BlockType {
@@ -31,8 +31,13 @@ public class BlockTypes {
         public final boolean isTranslucent;
         public final boolean canGreedyMesh;
         public final boolean isFullBlock;
+        public boolean canFaceCull = true;
         public IBlockGeometry geometry;
 
+        public BlockType setFaceCull(boolean canFaceCull) {
+            this.canFaceCull = canFaceCull;
+            return this;
+        }
 
         public BlockType addGeometry(IBlockGeometry geometry) {
             this.geometry = geometry;
@@ -66,6 +71,12 @@ public class BlockTypes {
             }
             return false;
         }
+    }
+
+
+    public static boolean isFluid(Block block){
+        if(block == null) return false;
+        return block.blockType.equals(WATER);
     }
 
     public interface TextureSideGetter {

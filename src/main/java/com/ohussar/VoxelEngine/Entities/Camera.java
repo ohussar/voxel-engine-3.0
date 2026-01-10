@@ -93,10 +93,10 @@ public class Camera {
             if (!previousPos.equals(pos)) {
                 previousPos = pos;
                 Block block = Main.world.getBlock(pos.toVec3f());
-                if (block != null) {
+                if (block != null && !BlockTypes.isFluid(block)) {
                     Vec3i ray1 = new Vec3i(new Vector3f((int) Math.round(xx), (int) Math.round(beforeY), (int) Math.round(beforeZ)));
                     Block block1 = Main.world.getBlock(ray1.toVec3f());
-                    if(block1 != null){
+                    if(block1 != null && !BlockTypes.isFluid(block1)) {
                         Vec3i newPos = ray1.translate(-(int)Math.signum(dx), 0,0);
                         System.out.println(newPos);
                         System.out.println(playerPos);
@@ -112,7 +112,7 @@ public class Camera {
                     }
                     Vec3i ray2 = new Vec3i(new Vector3f((int) Math.round(beforeX), (int) Math.round(yy), (int) Math.round(beforeZ)));
                     Block block2 = Main.world.getBlock(ray2.toVec3f());
-                    if(block2 != null){
+                    if(block2 != null && !BlockTypes.isFluid(block2)) {
                         Vec3i newPos = ray2.translate(0, -(int)Math.signum(dy),0);
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
                             break;
@@ -122,7 +122,7 @@ public class Camera {
                     }
                     Vec3i ray3 = new Vec3i(new Vector3f((int) Math.round(beforeX), (int) Math.round(beforeY), (int) Math.round(zz)));
                     Block block3 = Main.world.getBlock(ray3.toVec3f());
-                    if(block3 != null){
+                    if(block3 != null  && !BlockTypes.isFluid(block3)) {
                         Vec3i newPos = ray3.translate(0, 0,-(int)Math.signum(dz));
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
                             break;
@@ -165,7 +165,7 @@ public class Camera {
             if (!previousPos.equals(pos)) {
                 previousPos = pos;
                 Block block = Main.world.getBlock(pos.toVec3f());
-                if (block != null) {
+                if (block != null && !BlockTypes.isFluid(block)) {
                     found = block;
                     break;
                 }

@@ -60,6 +60,11 @@ public class Chunk {
             addBlockToChunkInternal(null, x, y, z);
         }
     }
+
+    public Block getBlockAtPos(Vector3f position){
+        return getBlockAtPos((int) position.x, (int) position.y, (int) position.z);
+    }
+
     public Block getBlockAtPos(int x, int y, int z){
         int coord = y * CHUNK_SIZE_X + x + z * (CHUNK_SIZE_X * CHUNK_SIZE_Y);
         if(coord >= CHUNK_BLOCKS.length){
@@ -182,6 +187,9 @@ public class Chunk {
                             fr = result[4];
                             ba = result[5];
                             meshBuildMap.put(block, ctx);
+                        }
+                        if(!block.blockType.canFaceCull){
+                            up = dw = rt = lt = fr = ba =false;
                         }
 
                         if(!up){

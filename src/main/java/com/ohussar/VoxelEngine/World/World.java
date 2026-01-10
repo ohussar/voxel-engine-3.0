@@ -180,7 +180,9 @@ public class World {
            ChunkStructureBleed.ChunkBleed thisChunk = bleed.getChunkBleed(chunkpos);
             if(thisChunk != null){
                 for(Block b : thisChunk.blocks){
-                    bundle.centerChunk.addBlockToChunkInternal(b, (int)b.position.x, (int)b.position.y, (int)b.position.z);
+                    if(bundle.centerChunk.getBlockAtPos(b.position) == null) {
+                        bundle.centerChunk.addBlockToChunkInternal(b, (int) b.position.x, (int) b.position.y, (int) b.position.z);
+                    }
                 }
             }
             //bundle.centerChunk.prepareMesh();
