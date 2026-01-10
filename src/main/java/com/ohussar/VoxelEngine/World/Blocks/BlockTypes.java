@@ -1,5 +1,7 @@
-package com.ohussar.VoxelEngine.World;
+package com.ohussar.VoxelEngine.World.Blocks;
 
+import com.ohussar.VoxelEngine.Entities.Cube;
+import com.ohussar.VoxelEngine.Entities.IBlockGeometry;
 import com.ohussar.VoxelEngine.Textures.TextureArray;
 
 import java.util.ArrayList;
@@ -17,19 +19,53 @@ public class BlockTypes {
     public static final BlockType GRASS = new BlockType(2, new GrassTextureGetter());
     public static final BlockType SAND = new BlockType(3, new AllSideGetter("sand"));
     public static final BlockType LOG = new BlockType(4, new PillarTextureGetter("log_side", "log_vertical"));
-    public static final BlockType LEAVES = new BlockType(5, new AllSideGetter("leaves"));
+    public static final BlockType LEAVES = new BlockType(5, new AllSideGetter("leaves"), true,true, false);
+    public static final BlockType WATER = new WaterBlockType(6);
+
     public static class BlockType {
 
         public final int id;
 
         public final TextureSideGetter textureGetter;
 
+        public final boolean isTranslucent;
+        public final boolean canGreedyMesh;
+        public final boolean isFullBlock;
+        public IBlockGeometry geometry;
+
+
+        public BlockType addGeometry(IBlockGeometry geometry) {
+            this.geometry = geometry;
+            return this;
+        }
+
         public BlockType(int id, TextureSideGetter texture){
             this.id = id;
             this.textureGetter = texture;
             BLOCK_TYPES.put(id, this);
+            isTranslucent = false;
+            canGreedyMesh = true;
+            geometry = new Cube();
+            isFullBlock = true;
         }
 
+        public BlockType(int id, TextureSideGetter texture, boolean isFullBlock, boolean isTranslucent, boolean canGreedyMesh){
+            this.id = id;
+            this.textureGetter = texture;
+            this.canGreedyMesh = canGreedyMesh;
+            BLOCK_TYPES.put(id, this);
+            this.isTranslucent = isTranslucent;
+            geometry = new Cube();
+            this.isFullBlock = isFullBlock;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if(obj instanceof BlockType blockType){
+                return id == blockType.id;
+            }
+            return false;
+        }
     }
 
     public interface TextureSideGetter {

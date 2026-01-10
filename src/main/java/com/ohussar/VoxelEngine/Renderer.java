@@ -137,20 +137,29 @@ public class Renderer {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         glActiveTexture(GL_TEXTURE0);
+        glEnable(GL_CULL_FACE); // Enable face culling
+        glCullFace(GL_BACK);    // Cull back faces (default behavior)
+        glFrontFace(GL_CW);
         GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, TextureArray.worldId);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        Vector3f p = new Vector3f(chunk.getPosition().x*16f -0.5f, chunk.getPosition().y*16-0.5f, chunk.getPosition().z*16f -0.5f);
+        Vector3f p = new Vector3f(chunk.getPosition().x*Chunk.CHUNK_SIZE_X -0.5f, chunk.getPosition().y*Chunk.CHUNK_SIZE_Y-0.5f, chunk.getPosition().z*Chunk.CHUNK_SIZE_Z -0.5f);
         Matrix4f transformMatrix = Maths.createTransformationMatrix(p, Util.EmptyVec3(), 1f);
         shader.loadTransformationMatrix(transformMatrix);
-        GL30.glBindVertexArray(chunk.meshData.VAO);
+        renderVAO(chunk.meshData.VAO, chunk.meshData.verticesCount);
+        renderVAO(chunk.translucentMeshData.VAO, chunk.translucentMeshData.verticesCount);
+
+    }
+
+
+    public static void renderVAO(int vao,  int verticeCount){
+        GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(0);
-        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0,chunk.meshData.verticesCount);
+        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, verticeCount);
         GL20.glDisableVertexAttribArray(0);
         GL30.glBindVertexArray(0);
     }
+
 
 
     public void createProjectionMatrix(){

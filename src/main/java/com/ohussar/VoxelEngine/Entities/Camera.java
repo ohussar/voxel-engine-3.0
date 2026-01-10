@@ -2,18 +2,10 @@ package com.ohussar.VoxelEngine.Entities;
 
 import com.ohussar.VoxelEngine.Main;
 import com.ohussar.VoxelEngine.Mouse;
-import com.ohussar.VoxelEngine.Textures.TextureArray;
 import com.ohussar.VoxelEngine.Util.Vec3i;
-import com.ohussar.VoxelEngine.World.Block;
-import com.ohussar.VoxelEngine.World.BlockTypes;
-import org.lwjgl.Sys;
+import com.ohussar.VoxelEngine.World.Blocks.Block;
+import com.ohussar.VoxelEngine.World.Blocks.BlockTypes;
 import org.lwjgl.util.vector.Vector3f;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.ohussar.VoxelEngine.Entities.Cube.*;
-import static com.ohussar.VoxelEngine.Entities.Cube.NZ_POS;
 
 public class Camera {
     Vector3f position;
@@ -115,7 +107,7 @@ public class Camera {
                             break;
                         }
 
-                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE.id));
+                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE));
                         break;
                     }
                     Vec3i ray2 = new Vec3i(new Vector3f((int) Math.round(beforeX), (int) Math.round(yy), (int) Math.round(beforeZ)));
@@ -125,7 +117,7 @@ public class Camera {
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
                             break;
                         }
-                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE.id));
+                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE));
                         break;
                     }
                     Vec3i ray3 = new Vec3i(new Vector3f((int) Math.round(beforeX), (int) Math.round(beforeY), (int) Math.round(zz)));
@@ -135,7 +127,7 @@ public class Camera {
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
                             break;
                         }
-                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE.id));
+                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE));
                         break;
                     }
                     break;

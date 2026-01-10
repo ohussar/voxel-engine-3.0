@@ -1,11 +1,11 @@
 package com.ohussar.VoxelEngine.World;
 
 import com.ohussar.VoxelEngine.Entities.Camera;
-import com.ohussar.VoxelEngine.Main;
 import com.ohussar.VoxelEngine.Test.OpenSimplexNoise;
 import com.ohussar.VoxelEngine.Test.PerlinNoiseGenerator;
 import com.ohussar.VoxelEngine.Util.Vec3i;
-import org.lwjgl.Sys;
+import com.ohussar.VoxelEngine.World.Blocks.Block;
+import com.ohussar.VoxelEngine.World.Blocks.BlockTypes;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.util.*;
@@ -29,9 +29,12 @@ public class World {
         if(!chunkCameraPos.equals(previousCameraPos)){
             updated = false;
             previousCameraPos = chunkCameraPos;
+
             loadedChunks.clear();
-            for(int i = -10; i < 10; i++){
-                for(int j = -10; j < 10; j++){
+
+
+            for(int i = -7; i < 7; i++){
+                for(int j = -7; j < 7; j++){
                     int finalI = i;
                     int finalJ = j;
                     Vec3i copy = chunkCameraPos.copy();
@@ -68,22 +71,39 @@ public class World {
     public void generateChunk(int chunkx, int chunkz){
         generateChunk(new Vec3i(chunkx, 0, chunkz));
     }
+
+    public Block getBlock(int x, int y, int z){
+        return getBlock(new Vector3f(x, y, z));
+    }
+    public Block getBlockSpecial(Chunk c, int x, int y, int z){
+        int chunkx = (int) Math.floor((double)x/(double)16);
+        int chunkz = (int) Math.floor((double)z/(double)16);
+        Vector3f chunkpos = new Vec3i(chunkx, 0, chunkz).toVec3f();
+        if(chunkpos.equals(c.getPosition())){
+            return c.getBlockAtPos(x-16*chunkx, y, z-16*chunkz);
+        }
+        return getBlock(new Vector3f(x, y, z));
+    }
+    public Block getBlockSpecial(Chunk c, Vector3f position){
+        return getBlockSpecial(c, (int) position.x, (int) position.y, (int) position.z);
+    }
+
     public Block getBlock(Vector3f pos){
         int xx = (int) pos.x;
         int yy = (int) pos.y;
         int zz = (int) pos.z;
 
-        int chunkx = (int) Math.floor((double)xx/(double)16);
-        int chunkz = (int) Math.floor((double)zz/(double)16);
+        int chunkx = (int) Math.floor((double)xx/(double)Chunk.CHUNK_SIZE_X);
+        int chunkz = (int) Math.floor((double)zz/(double)Chunk.CHUNK_SIZE_Z);
         Vec3i chunkpos = new Vec3i(chunkx, 0, chunkz);
         if(!isChunkGenerated(chunkpos)){
             return null;
         }
         Chunk chunk = chunks.get(chunkpos);
-
-        int relx = xx - chunkx * 16;
+        if(chunk == null) return null;
+        int relx = xx - chunkx * Chunk.CHUNK_SIZE_X;
         int rely = yy;
-        int relz = zz - chunkz * 16;
+        int relz = zz - chunkz * Chunk.CHUNK_SIZE_Z;
 
         if(rely >= Chunk.CHUNK_SIZE_Y){
             return null;
@@ -91,7 +111,7 @@ public class World {
 
         Block ret = chunk.getBlockAtPos(relx, rely, relz);
         if(ret!=null){
-            return new Block(new Vector3f(relx + chunkx * 16, rely, relz + chunkz * 16), ret.blockTypeId);
+            return new Block(new Vector3f(relx + chunkx * Chunk.CHUNK_SIZE_X, rely, relz + chunkz * Chunk.CHUNK_SIZE_Z), ret.blockType);
         }
         return null;
     }
@@ -101,8 +121,8 @@ public class World {
         int yy = (int) block.position.getY();
         int zz = (int) block.position.getZ();
 
-        int chunkx = (int) Math.floor((double)xx/(double)16);
-        int chunkz = (int) Math.floor((double)zz/(double)16);
+        int chunkx = (int) Math.floor((double)xx/(double)Chunk.CHUNK_SIZE_X);
+        int chunkz = (int) Math.floor((double)zz/(double)Chunk.CHUNK_SIZE_Z);
         Vec3i chunkpos = new Vec3i(chunkx, 0, chunkz);
         if(!isChunkGenerated(chunkpos)){
             generateChunk(chunkpos);
@@ -111,6 +131,30 @@ public class World {
         Chunk chunk = chunks.get(chunkpos);
         chunk.addBlockToChunk(block);
         chunk.prepareMesh();
+        chunk.buildMesh();
+    }
+
+    public Chunk getChunkFromBPos(Vec3i pos){
+        int xx = (int) pos.getX();
+        int yy = (int) pos.getY();
+        int zz = (int) pos.getZ();
+
+        int chunkx = (int) Math.floor((double)xx/(double)Chunk.CHUNK_SIZE_X);
+        int chunkz = (int) Math.floor((double)zz/(double)Chunk.CHUNK_SIZE_Z);
+        Vec3i chunkpos = new Vec3i(chunkx, 0, chunkz);
+        Chunk chunk = chunks.get(chunkpos);
+        return chunk;
+    }
+
+    public Chunk getChunkFromPos(Vector3f pos){
+        return getChunkFromPos(new Vec3i(pos));
+    }
+
+    public Chunk getChunkFromPos(Vec3i pos){
+
+        Vec3i chunkpos = new Vec3i(pos.getX(), 0, pos.getZ());
+        Chunk chunk = chunks.get(chunkpos);
+        return chunk;
     }
 
     public void removeBlock(Vec3i pos){
@@ -118,13 +162,14 @@ public class World {
         int yy = (int) pos.getY();
         int zz = (int) pos.getZ();
 
-        int chunkx = (int) Math.floor((double)xx/(double)16);
-        int chunkz = (int) Math.floor((double)zz/(double)16);
+        int chunkx = (int) Math.floor((double)xx/(double)Chunk.CHUNK_SIZE_X);
+        int chunkz = (int) Math.floor((double)zz/(double)Chunk.CHUNK_SIZE_Z);
         Vec3i chunkpos = new Vec3i(chunkx, 0, chunkz);
         Chunk chunk = chunks.get(chunkpos);
         if(chunk != null){
-            chunk.removeBlockFromChunk(xx-chunkx*16, yy, zz-chunkz*16);
+            chunk.removeBlockFromChunk(xx-chunkx*Chunk.CHUNK_SIZE_X, yy, zz-chunkz*Chunk.CHUNK_SIZE_Z);
             chunk.prepareMesh();
+            chunk.buildMesh();
         }
     }
 
@@ -138,7 +183,8 @@ public class World {
                     bundle.centerChunk.addBlockToChunkInternal(b, (int)b.position.x, (int)b.position.y, (int)b.position.z);
                 }
             }
-            bundle.centerChunk.prepareMesh();
+            //bundle.centerChunk.prepareMesh();
+            ChunkMeshPreparingHandler.addChunkToQueue(bundle.centerChunk);
             chunks.put(chunkpos, bundle.centerChunk);
         }
     }
@@ -149,21 +195,37 @@ public class World {
         PerlinNoiseGenerator gen = new PerlinNoiseGenerator();
         for(int x = 0; x < 16; x++){
             for(int z = 0; z < 16; z++){
-                int height = (int) gen.generateHeight(x + chunkpos.getX() * 16, z + chunkpos.getZ() * 16);
-                height += 60;
-                Block block;
-                if(height < 45){
-                    block = new Block(new Vector3f(x, height, z), BlockTypes.SAND.id);
-                }else{
-                    block = new Block(new Vector3f(x, height, z), BlockTypes.GRASS.id);
+                int height = (int) gen.generateHeight(x + chunkpos.getX() * Chunk.CHUNK_SIZE_X, z + chunkpos.getZ() * Chunk.CHUNK_SIZE_Z);
+                height += 56;
+                Block block = new Block(new Vector3f(x, height, z), BlockTypes.SAND);
+
+
+                if(height <= 43){
+                    int max = 45;
+                    for(int i = height; i < max; i++) {
+                        if (i == height) {
+                            Block b = new Block(new Vector3f(x, i, z), BlockTypes.SAND);
+                            generatedChunk.addBlockToChunkInternal(b, x, i, z);
+                        } else{
+                            Block b = new Block(new Vector3f(x, i, z), BlockTypes.WATER);
+                            generatedChunk.addBlockToChunkInternal(b, x, i, z);
+                        }
+                    }
+                }
+
+                if(height <= 45 && height > 43){
+                    block = new Block(new Vector3f(x, height, z), BlockTypes.SAND);
+                }else if(height > 43){
+                    block = new Block(new Vector3f(x, height, z), BlockTypes.GRASS);
                 }
                 generatedChunk.addBlockToChunkInternal(block, x, height, z);
                 for (int y = height-1; y > 0; y--) {
-                    Block b = new Block(new Vector3f(x, y, z), BlockTypes.DIRT.id);
+                    Block b = new Block(new Vector3f(x, y, z), BlockTypes.DIRT);
                     generatedChunk.addBlockToChunkInternal(b, x, y, z);
                 }
-
-                treeGeneration(bleed, chunkpos, new Vec3i(x, height+1, z));
+                if(height > 43) {
+                    treeGeneration(bleed, chunkpos, new Vec3i(x, height + 1, z));
+                }
             }
         }
 
@@ -180,8 +242,10 @@ public class World {
         for(int j = 0; j < around.length; j++){
             for(int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int height = (int) gen.generateHeight(x + around[j].getX() * 16, z + around[j].getZ() * 16)+60;
-                    treeGeneration(bleed, around[j], new Vec3i(x, height+1, z));
+                    int height = (int) gen.generateHeight(x + around[j].getX() *  Chunk.CHUNK_SIZE_X, z + around[j].getZ() *  Chunk.CHUNK_SIZE_Z)+56;
+                    if(height > 43) {
+                        treeGeneration(bleed, around[j], new Vec3i(x, height + 1, z));
+                    }
                 }
             }
         }
@@ -203,7 +267,7 @@ public class World {
             height = Math.min(10, height);
 
             for (int i = 0; i < height; i++) {
-                Block block = new Block(new Vector3f(blockpos.getX(), blockpos.getY()+i, blockpos.getZ()), BlockTypes.LOG.id);
+                Block block = new Block(new Vector3f(blockpos.getX(), blockpos.getY()+i, blockpos.getZ()), BlockTypes.LOG);
                 List<Block> b = Collections.synchronizedList(new ArrayList<>());
                 b.add(block);
                 bld.setChunkBleed(chunkpos, b);
@@ -219,9 +283,9 @@ public class World {
                         double yy = Math.sin(rad) * i;
                         int rxx = blockpos.getX() + (int) Math.round(xx);
                         int ryy = blockpos.getZ() + (int) Math.round(yy);
-                        int blx = (rxx+16) % 16;
-                        int bly = (ryy+16) % 16;
-                        Block leave = new Block(new Vector3f(blx, blockpos.getY() + height - 1 + k, bly), BlockTypes.LEAVES.id);
+                        int blx = (rxx+ Chunk.CHUNK_SIZE_X) %  Chunk.CHUNK_SIZE_X;
+                        int bly = (ryy+ Chunk.CHUNK_SIZE_Z) %  Chunk.CHUNK_SIZE_Z;
+                        Block leave = new Block(new Vector3f(blx, blockpos.getY() + height - 1 + k, bly), BlockTypes.LEAVES);
                         Vec3i newP = chunkpos.copy();
                         if (rxx > Chunk.CHUNK_SIZE_X - 1) {
                             newP.setX(newP.getX() + 1);

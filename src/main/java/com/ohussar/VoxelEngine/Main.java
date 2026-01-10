@@ -8,6 +8,8 @@ import com.ohussar.VoxelEngine.Textures.TextureArray;
 import com.ohussar.VoxelEngine.UI.UIRenderer;
 import com.ohussar.VoxelEngine.Util.Vec3i;
 import com.ohussar.VoxelEngine.World.Chunk;
+import com.ohussar.VoxelEngine.World.ChunkMeshPreparingHandler;
+import com.ohussar.VoxelEngine.World.ViewCulling;
 import com.ohussar.VoxelEngine.World.World;
 import imgui.ImGui;
 import imgui.app.Application;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class Main extends Application {
     public static final int FRAMERATE = 75;
@@ -33,6 +36,8 @@ public class Main extends Application {
     public static Camera camera;
     public static World world;
     public static Player player;
+
+    public int timer = 0;
 
     public static Configuration config;
 
@@ -71,67 +76,97 @@ public class Main extends Application {
         StaticShader = new StaticShader();
         Main.UIShader = new UIShader();
         renderer = new Renderer(StaticShader);
-        camera = new Camera(new Vector3f(0, 80, 0), new Vector3f(0, 0, 0));
+        camera = new Camera(new Vector3f(0, 45, 0), new Vector3f(0, 0, 0));
         world = new World();
-        player = new Player(new Vector3f(0, 40, 0));
-
+        player = new Player(new Vector3f(0, 45, 0));
+        world.tick(camera);
         uiRenderer = new UIRenderer(Main.UIShader);
+
+
+        Thread worldTickThread = new Thread(this::tick);
+        worldTickThread.setName("World Tick Thread");
+        worldTickThread.start();
+        Thread chunkPrepare = new Thread(ChunkMeshPreparingHandler::run);
+        chunkPrepare.setName("Chunk Preparer");
+        chunkPrepare.start();
+
         GLFW.glfwSetCursorPosCallback(main.getHandle(), Mouse.cursorPosCallback);
         GLFW.glfwSetInputMode(main.getHandle(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
     }
 
+    public void tick()  {
+        double timerPerTickIdeal = 1000f*(1/20f);
+
+        while(true) {
+            long startTime = System.nanoTime();
+            world.tick(camera);
+            long endTime = System.nanoTime();
+
+            double timeTaken = (endTime - startTime)/100000d;
+
+            if(!(timeTaken > timerPerTickIdeal)){
+                double timeRemaining = timerPerTickIdeal - timeTaken;
+                try {
+                    Thread.sleep((long) timeRemaining);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+
     @Override
     public void process() {
+        timer++;
+        if(timer < 120){
+            return;
+        }
         long startTime = System.nanoTime();
         renderer.prepare();
-
-        world.tick(camera);
         player.tick(world, camera);
         camera.tick();
+
+        long translucentStart =  System.nanoTime();
+        if(!player.previousBlockPos.equals(player.blockPos)){
+            Chunk c = world.getChunkFromBPos(player.blockPos);
+            if(c!= null){
+                Chunk c1 = world.getChunkFromPos(new Vec3i((int)(c.getPosition().getX()) + 1, (int)c.getPosition().getY(), (int)c.getPosition().getZ()));
+                Chunk c2 = world.getChunkFromPos(new Vec3i((int)c.getPosition().getX() - 1, (int)c.getPosition().getY(), (int)c.getPosition().getZ()));
+                Chunk c3 = world.getChunkFromPos(new Vec3i((int)c.getPosition().getX(), (int)c.getPosition().getY(), (int)c.getPosition().getZ()+1));
+                Chunk c4 = world.getChunkFromPos(new Vec3i((int)c.getPosition().getX(), (int)c.getPosition().getY(), (int)c.getPosition().getZ()-1));
+                c.buildTranslucentMesh();
+                c1.buildTranslucentMesh();
+                c2.buildTranslucentMesh();
+                c3.buildTranslucentMesh();
+                c4.buildTranslucentMesh();
+            }
+        }
+        long translucentTime = System.nanoTime() - translucentStart;
+
+
         StaticShader.start();
         StaticShader.loadViewMatrix(camera);
 
-
-        int visibleChunks = 0;
-        float yrot = camera.getRotation().y + 180;
-        Vector3f lookVec = new Vector3f((float)-Math.sin(Math.toRadians(yrot)), 0, (float)Math.cos(Math.toRadians(yrot)));
-        lookVec = lookVec.normalise(lookVec);
-
-        List<World.ChunkDist> chunkDistList = new ArrayList<>();
         long cullingStartTime = System.nanoTime();
-        for(Chunk chunk : world.getLoadedChunks()) {
-            Vector3f cPos = camera.getPosition();
-            Vec3i chunkCameraPos = new Vec3i((int)Math.floor(cPos.x/16), 0, (int)Math.floor(cPos.z/16));
-            if(chunk != null){
-                Vector3f dir = new Vector3f(0, 0, 0);
-                Vector3f dist = new Vector3f(0, 0, 0);
-                dist = Vector3f.sub(chunk.getPosition(), chunkCameraPos.toVec3f(), dist);
-                dir = dist.normalise(null);
-
-                double angle = Vector3f.dot(dir, lookVec);
-                if(angle >= 0.3 || dist.length() < 2.5){
-                    if(!chunk.meshGenerated){
-                        chunk.buildMesh();
-                    }
-                    chunkDistList.add(new World.ChunkDist(chunk, dist.length()));
-                    visibleChunks ++;
-                }
-
-            }
-
-
-        }
-        chunkDistList.sort((p1, p2) -> Float.compare(p2.dist, p1.dist));
+        List<World.ChunkDist>  chunkDistList = ViewCulling.cullChunks();
+        int visibleChunks = chunkDistList.size();
         long cullingEndTime = System.nanoTime() - cullingStartTime;
+
         long renderStartTime = System.nanoTime();
         for(World.ChunkDist chunkDist : chunkDistList){
             renderer.renderChunk(chunkDist.chunk, StaticShader, null);
         }
+
         long renderTime =  System.nanoTime() - renderStartTime;
 
 
         Keyboard.keyPressedLoopRegister(GLFW.GLFW_KEY_ESCAPE);
         Keyboard.keyPressedLoopRegister(GLFW.GLFW_KEY_SPACE);
+        Keyboard.keyPressedLoopRegister(GLFW.GLFW_KEY_E);
+        if(Keyboard.isKeyPressed(GLFW.GLFW_KEY_E)){
+            renderer.renderMesh = !renderer.renderMesh;
+        }
         if(Keyboard.isKeyPressed(GLFW.GLFW_KEY_ESCAPE)) {
             isImGUI = !isImGUI;
             if(isImGUI) {
@@ -154,16 +189,21 @@ public class Main extends Application {
         double totaltime = (System.nanoTime() - startTime)/1000000000d;
         frameNumber++;
         frameTime += totaltime;
-        cullingTime += cullingEndTime/1000000d;
-        renderTimeA += renderTime/1000000d;
+        cullingTime += (double) TimeUnit.NANOSECONDS.toMillis(cullingEndTime);
+        renderTimeA += (double) TimeUnit.NANOSECONDS.toMillis(renderTime);
 
         ImGui.begin("Info");
         ImGui.setWindowSize(300, 200);
         ImGui.text("Fps: " + 1/(frameTime/frameNumber));
         ImGui.text("Culling: "+ cullingTime/frameNumber +" ms ");
         ImGui.text("Render: " + renderTimeA/frameNumber + " ms");
+        ImGui.text("Translucent build: " + translucentTime + " ns");
+        ImGui.text("x: " + player.blockPos.getX() + " y: " + player.blockPos.getY() + " z: " + player.blockPos.getZ());
+        Chunk c = world.getChunkFromBPos(player.blockPos);
+        ImGui.text("ChunkPos | x: " + c.getPosition().getX() + " y: " + c.getPosition().getY() + " z: " + c.getPosition().getZ());
         int total = world.getLoadedChunks().size();
         ImGui.text("Visible  Chunks: " + visibleChunks + " Total Chunks: " + total);
+        ImGui.text("Chunks awaiting prepare: " + ChunkMeshPreparingHandler.awaitingPrepare.size());
         ImGui.end();
         if(frameNumber >= 60){
             frameNumber = 0;
@@ -171,6 +211,7 @@ public class Main extends Application {
             cullingTime = 0;
             renderTimeA = 0;
         }
+        chunkDistList.clear();
 
     }
 }

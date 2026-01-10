@@ -1,10 +1,11 @@
 package com.ohussar.VoxelEngine.Entities;
 
 import com.ohussar.VoxelEngine.Keyboard;
-import com.ohussar.VoxelEngine.Main;
 import com.ohussar.VoxelEngine.Util.Maths;
 import com.ohussar.VoxelEngine.Util.Util;
-import com.ohussar.VoxelEngine.World.Block;
+import com.ohussar.VoxelEngine.Util.Vec3i;
+import com.ohussar.VoxelEngine.World.Blocks.Block;
+import com.ohussar.VoxelEngine.World.Blocks.BlockTypes;
 import com.ohussar.VoxelEngine.World.World;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.util.vector.Vector3f;
@@ -16,6 +17,9 @@ public class Player {
     public Vector3f position;
     public float speed = 0.035f;
     public Vector3f velocity;
+
+    public Vec3i blockPos;
+    public Vec3i previousBlockPos;
     public Vector3f[] boundingBox = {
             new Vector3f(0.7f, 0, 0.7f),
             new Vector3f(0.7f, 0, 0.2f),//
@@ -31,6 +35,8 @@ public class Player {
     public Player(Vector3f position){
         this.position = position;
         this.velocity = new Vector3f(0, 0, 0);
+        this.blockPos = new Vec3i((int) Math.floor(position.x), (int) Math.floor(position.y), (int) Math.floor(position.z));
+        this.previousBlockPos = blockPos.copy();
 //        Vector3f[] vert = Cube.NX_POS.clone();
 //        Vector2f[] uvs = Cube.UV.clone();
 //        List<Float> vertC = new ArrayList<>();
@@ -58,13 +64,14 @@ public class Player {
     }
 
     public void tick(World world, Camera camera){
-        this.velocity.translate(0, -0.01f, 0);
-        if(Keyboard.isKeyDown(GLFW.GLFW_KEY_SPACE) && isGrounded){
+        previousBlockPos = blockPos.copy();
+        //this.velocity.translate(0, -0.01f, 0);
+        if(Keyboard.isKeyDown(GLFW.GLFW_KEY_SPACE) /*&& isGrounded*/){
             this.velocity.y = 0.165f;
         }else if(Keyboard.isKeyDown(GLFW.GLFW_KEY_LEFT_CONTROL)){
-            //this.velocity.y = -0.1f;
+            this.velocity.y = -0.1f;
         }else{
-            //this.velocity.y = 0.0f;
+            this.velocity.y = 0.0f;
         }
 
 
@@ -73,6 +80,10 @@ public class Player {
         collision(world);
         this.position.translate(this.velocity.x, this.velocity.y, this.velocity.z);
         camera.position = new Vector3f(this.position.x, this.position.y + 1, this.position.z);
+
+        blockPos.setX(Math.round(position.x));
+        blockPos.setY(Math.round(position.y));
+        blockPos.setZ(Math.round(position.z));
     }
 
     public void collision(World world){
@@ -81,18 +92,25 @@ public class Player {
             futurePosX = Util.floorVector(futurePosX);
 
             if(world.getBlock(futurePosX) != null){
-                this.velocity.x = 0;
+                if(!world.getBlock(futurePosX).blockType.equals(BlockTypes.WATER)) {
+                    this.velocity.x = 0;
+                }
             }
             Vector3f futurePosZ = new Vector3f(this.position.x + point.x , this.position.y + point.y, this.position.z + point.z + this.velocity.z);
             futurePosZ = Util.floorVector(futurePosZ);
+
             if(world.getBlock(futurePosZ) != null){
-                this.velocity.z = 0;
+                if(!world.getBlock(futurePosZ).blockType.equals(BlockTypes.WATER)) {
+                    this.velocity.z = 0;
+                }
             }
             Vector3f futurePosY = new Vector3f(this.position.x +point.x, this.position.y + point.y + this.velocity.y, this.position.z + point.z);
             futurePosY = Util.floorVector(futurePosY);
             if(world.getBlock(futurePosY) != null){
-                this.velocity.y = 0;
-                isGrounded = true;
+                if(!world.getBlock(futurePosY).blockType.equals(BlockTypes.WATER)) {
+                    this.velocity.y = 0;
+                    isGrounded = true;
+                }
             }
         }
     }

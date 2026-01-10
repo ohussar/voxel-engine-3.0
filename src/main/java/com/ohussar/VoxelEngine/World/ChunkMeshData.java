@@ -11,6 +11,7 @@ public class ChunkMeshData {
     public final List<Float> positionList;
     public final List<Byte> blockTypeList;
     public List<Byte> normalList;
+    public List<Integer> modelOffsets;
     public int verticesCount = 0;
 
     public int VAO = -1;
@@ -18,6 +19,18 @@ public class ChunkMeshData {
         this.positionList = new ArrayList<>();
         this.blockTypeList = new ArrayList<>();
         this.normalList = new ArrayList<>();
+        this.modelOffsets = new ArrayList<>();
         //VAO = Main.StaticLoader.updateVAO(VAO, new float[]{}, new byte[]{});
     }
+
+    public void clear(boolean can){
+        positionList.clear();
+        blockTypeList.clear();
+        normalList.clear();
+        modelOffsets.clear();
+        if(can) {
+            verticesCount = 0;
+        }
+    }
+
 }

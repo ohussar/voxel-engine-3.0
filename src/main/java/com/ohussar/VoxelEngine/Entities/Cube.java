@@ -1,9 +1,19 @@
 package com.ohussar.VoxelEngine.Entities;
 
+import com.ohussar.VoxelEngine.World.Blocks.IMeshBuildingContext;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 
-public final class Cube {
+public final class Cube implements IBlockGeometry {
+
+
+    public static final int UP = 0; // + y
+    public static final int DOWN = 1; // - y
+    public static final int EAST = 2; // +x
+    public static final int WEST = 3; // -x
+    public static final int NORTH = 4;// +z
+    public static final int SOUTH = 5; // -z
+
 
     public static Vector3f[] PX_POS = {
 
@@ -12,18 +22,20 @@ public final class Cube {
             new Vector3f(1.0f,0.0f,1.0f),
             new Vector3f(1.0f,0.0f,1.0f),
             new Vector3f(1.0f,1.0f,1.0f),
-            new Vector3f(1.0f,1.0f,0.0f)
+            new Vector3f(1.0f,1.0f,0.0f),
+            new Vector3f(1f, 0.5f, 0.5f) // face center
 
     };
 
     public static Vector3f[] NX_POS = {
-
             new Vector3f(0.0f,1.0f,0.0f),
-            new Vector3f(0.0f,0.0f,0.0f),
-            new Vector3f(0.0f,0.0f,1.0f),
-            new Vector3f(0.0f,0.0f,1.0f),
             new Vector3f(0.0f,1.0f,1.0f),
-            new Vector3f(0.0f,1.0f,0.0f)
+            new Vector3f(0.0f,0.0f,1.0f),
+            new Vector3f(0.0f,0.0f,1.0f),
+            new Vector3f(0.0f,0.0f,0.0f),
+            new Vector3f(0.0f,1.0f,0.0f),
+
+            new Vector3f(0f, 0.5f, 0.5f) // face center
 
     };
 
@@ -34,29 +46,32 @@ public final class Cube {
             new Vector3f(1.0f,1.0f,0.0f),
             new Vector3f(1.0f,1.0f,0.0f),
             new Vector3f(1.0f,1.0f,1.0f),
-            new Vector3f(0.0f,1.0f,1.0f)
+            new Vector3f(0.0f,1.0f,1.0f),
+            new Vector3f(0.5f, 1.0f, 0.5f) // face center
 
     };
 
     public static Vector3f[] NY_POS = {
 
             new Vector3f(0.0f,0.0f,1.0f),
-            new Vector3f(0.0f,0.0f,0.0f),
-            new Vector3f(1.0f,0.0f,0.0f),
-            new Vector3f(1.0f,0.0f,0.0f),
             new Vector3f(1.0f,0.0f,1.0f),
-            new Vector3f(0.0f,0.0f,1.0f)
+            new Vector3f(1.0f,0.0f,0.0f),
+            new Vector3f(1.0f,0.0f,0.0f),
+            new Vector3f(0.0f,0.0f,0.0f),
+            new Vector3f(0.0f,0.0f,1.0f),
+            new Vector3f(0.5f, 0.0f, 0.5f)
 
     };
 
     public static Vector3f[] PZ_POS = {
 
             new Vector3f(0.0f,1.0f,1.0f),
-            new Vector3f(0.0f,0.0f,1.0f),
-            new Vector3f(1.0f,0.0f,1.0f),
-            new Vector3f(1.0f,0.0f,1.0f),
             new Vector3f(1.0f,1.0f,1.0f),
-            new Vector3f(0.0f,1.0f,1.0f)
+            new Vector3f(1.0f,0.0f,1.0f),
+            new Vector3f(1.0f,0.0f,1.0f),
+            new Vector3f(0.0f,0.0f,1.0f),
+            new Vector3f(0.0f,1.0f,1.0f),
+            new Vector3f(0.5f, 0.5f, 1.0f)
 
     };
 
@@ -67,101 +82,20 @@ public final class Cube {
             new Vector3f(1.0f,0.0f,0.0f),
             new Vector3f(1.0f,0.0f,0.0f),
             new Vector3f(1.0f,1.0f,0.0f),
-            new Vector3f(0.0f,1.0f,0.0f)
+            new Vector3f(0.0f,1.0f,0.0f),
+            new Vector3f(0.5f, 0.5f, 0.0f)
 
     };
 
-    public static Vector2f[] UV = {
+    public static Vector3f[][] FACES =  new Vector3f[][]{PY_POS, NY_POS, PX_POS, NX_POS, PZ_POS, NZ_POS};
 
-            new Vector2f(0.f, 0.f),
-            new Vector2f(0.f, 1.f),
-            new Vector2f(1.f, 1.f),
-            new Vector2f(1.f, 1.f),
-            new Vector2f(1.f, 0.f),
-            new Vector2f(0.f, 0.f)
+    @Override
+    public Vector3f[] getFace(int face) {
+        return FACES[face];
+    }
 
-    };
-
-    public static Vector3f[] NORMALS = {
-
-            new Vector3f(0.f, 0.f, 0.f),
-            new Vector3f(0.f, 0.f, 0.f),
-            new Vector3f(0.f, 0.f, 0.f),
-            new Vector3f(0.f, 0.f, 0.f),
-            new Vector3f(0.f, 0.f, 0.f),
-            new Vector3f(0.f, 0.f, 0.f)
-
-    };
-
-    public static final float[] vertices = {
-            0f,1.0f,0f,
-            0f,0f,0f,
-            1.0f,0f,0f,
-            1.0f,1.0f,0f,
-
-            0f,1.0f,1.0f,
-            0f,0f,1.0f,
-            1.0f,0f,1.0f,
-            1.0f,1.0f,1.0f, //
-
-            1.0f,1.0f,0f,
-            1.0f,0f,0f,
-            1.0f,0f,1.0f,
-            1.0f,1.0f,1.0f, //
-
-            0f,1.0f,0f,
-            0f,0f,0f,
-            0f,0f,1.0f,
-            0f,1.0f,1.0f,
-
-            0f,1.0f,1.0f,
-            0f,1.0f,0f,
-            1.0f,1.0f,0f,
-            1.0f,1.0f,1.0f,
-
-            0f,0f,1.0f,
-            0f,0f,0f,
-            1.0f,0f,0f,
-            1.0f,0f,1.0f
-    };
-    public static final int[] indices = {
-            0,1,3,
-            3,1,2,
-            4,5,7,
-            7,5,6,
-            8,9,11,
-            11,9,10,
-            12,13,15,
-            15,13,14,
-            16,17,19,
-            19,17,18,
-            20,21,23,
-            23,21,22
-    };
-    public static final float[] uv = {
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-    };
+    @Override
+    public int getModelOffsets(IMeshBuildingContext.MeshBuildContext context, Vector3f vertex, int face) {
+        return 0;
+    }
 }

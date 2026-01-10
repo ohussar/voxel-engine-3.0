@@ -1,6 +1,7 @@
 #version 400 core
+#extension GL_ARB_gpu_shader_int64 : enable
 
-in int compressedData;
+in int64_t compressedData;
 out vec4 pass_textureCoords;
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
@@ -8,9 +9,30 @@ uniform mat4 viewMatrix;
 
 void main(void){
 
-    vec3 position = vec3(compressedData & 31, ((compressedData) >> 5) & 511, (compressedData >> 14) & 31);
-    int normal = (compressedData >> 19) & 3;
-    int texture = (compressedData >> 21) & 0xFF;
+    int offsets = int(compressedData >> 32);
+
+    int offx = (offsets & 255);
+    int offy = ((offsets >> 9) & 255);
+    int offz = ((offsets >> 17) & 255);
+    if((offy&64) == 64){
+        offy-=64;
+        offy*=-1;
+    }
+    if((offx&64) == 64){
+       offx-=64;
+       offx*=-1;
+    }
+
+        if((offz&64) == 64){
+           offz-=64;
+           offz*=-1;
+        }
+    vec3 position = vec3(
+    (int(compressedData) & 31) + offx/32.0,
+     ((int(compressedData) >> 5) & 511) + offy/32.0,
+     (((int(compressedData) >> 14)) & 31) + offz/32.0);
+    int normal = (int(compressedData) >> 19) & 3;
+    int texture = (int(compressedData) >> 21) & 0xFF;
 
 
     gl_Position = projectionMatrix * viewMatrix * transformationMatrix * vec4(position.xyz, 1.0);

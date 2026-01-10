@@ -1,6 +1,7 @@
 package com.ohussar.VoxelEngine.World;
 
 import com.ohussar.VoxelEngine.Util.Vec3i;
+import com.ohussar.VoxelEngine.World.Blocks.Block;
 
 import java.util.ArrayList;
 import java.util.HashMap;
