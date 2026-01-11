@@ -99,7 +99,7 @@ public class BlockTypes {
     public static class GrassTextureGetter implements TextureSideGetter{
         public final String SIDES = "grass_side";
         public final String TOP = "grass_top";
-        public final String BOTTOM = "grass_bottom";
+        public final String BOTTOM = "dirt";
         @Override
         public int getTextureIdForSide(int side) {
 
