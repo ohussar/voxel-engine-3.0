@@ -138,10 +138,19 @@ public class Main extends Application {
                 Chunk c3 = world.getChunkFromPos(new Vec3i((int)c.getPosition().getX(), (int)c.getPosition().getY(), (int)c.getPosition().getZ()+1));
                 Chunk c4 = world.getChunkFromPos(new Vec3i((int)c.getPosition().getX(), (int)c.getPosition().getY(), (int)c.getPosition().getZ()-1));
                 c.buildTranslucentMesh();
-                c1.buildTranslucentMesh();
-                c2.buildTranslucentMesh();
-                c3.buildTranslucentMesh();
-                c4.buildTranslucentMesh();
+                if(c1 != null) {
+                    c1.buildTranslucentMesh();
+                }
+                if(c2 != null) {
+                    c2.buildTranslucentMesh();
+                }
+                if(c3 != null) {
+                    c3.buildTranslucentMesh();
+                }
+                if(c4 != null) {
+                    c4.buildTranslucentMesh();
+                }
+
             }
         }
         long translucentTime = System.nanoTime() - translucentStart;
@@ -195,8 +204,8 @@ public class Main extends Application {
         ImGui.text("Render: " + renderTimeA/frameNumber + " ms");
         ImGui.text("Translucent build: " + translucentTime + " ns");
         ImGui.text("x: " + player.blockPos.getX() + " y: " + player.blockPos.getY() + " z: " + player.blockPos.getZ());
-        Chunk c = world.getChunkFromBPos(player.blockPos);
-        ImGui.text("ChunkPos | x: " + c.getPosition().getX() + " y: " + c.getPosition().getY() + " z: " + c.getPosition().getZ());
+        Chunk c = world.getChunkFromPos(player.blockPos);
+        //ImGui.text("ChunkPos | x: " + c.getPosition().getX() + " y: " + c.getPosition().getY() + " z: " + c.getPosition().getZ());
         int total = world.getLoadedChunks().size();
         ImGui.text("Visible  Chunks: " + visibleChunks + " Total Chunks: " + total);
         ImGui.text("Chunks awaiting prepare: " + ChunkMeshPreparingHandler.awaitingPrepare.size());

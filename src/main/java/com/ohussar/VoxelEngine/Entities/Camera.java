@@ -98,16 +98,13 @@ public class Camera {
                     Block block1 = Main.world.getBlock(ray1.toVec3f());
                     if(block1 != null && !BlockTypes.isFluid(block1)) {
                         Vec3i newPos = ray1.translate(-(int)Math.signum(dx), 0,0);
-                        System.out.println(newPos);
-                        System.out.println(playerPos);
-                        System.out.println(playerPos1);
 
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
 
                             break;
                         }
 
-                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE));
+                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.GLASS));
                         break;
                     }
                     Vec3i ray2 = new Vec3i(new Vector3f((int) Math.round(beforeX), (int) Math.round(yy), (int) Math.round(beforeZ)));
@@ -117,7 +114,7 @@ public class Camera {
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
                             break;
                         }
-                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE));
+                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.GLASS));
                         break;
                     }
                     Vec3i ray3 = new Vec3i(new Vector3f((int) Math.round(beforeX), (int) Math.round(beforeY), (int) Math.round(zz)));
@@ -127,7 +124,7 @@ public class Camera {
                         if(newPos.equals(playerPos) || newPos.equals(playerPos1)){
                             break;
                         }
-                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.STONE));
+                        Main.world.placeBlock(new Block(newPos.toVec3f(), BlockTypes.GLASS));
                         break;
                     }
                     break;

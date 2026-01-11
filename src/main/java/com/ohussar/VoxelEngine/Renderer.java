@@ -137,9 +137,9 @@ public class Renderer {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_CULL_FACE); // Enable face culling
-        glCullFace(GL_BACK);    // Cull back faces (default behavior)
-        glFrontFace(GL_CW);
+        //glEnable(GL_CULL_FACE); // Enable face culling
+        //glCullFace(GL_BACK);    // Cull back faces (default behavior)
+        //glFrontFace(GL_CW);
         GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, TextureArray.worldId);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

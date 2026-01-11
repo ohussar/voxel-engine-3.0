@@ -21,6 +21,7 @@ public class BlockTypes {
     public static final BlockType LOG = new BlockType(4, new PillarTextureGetter("log_side", "log_vertical"));
     public static final BlockType LEAVES = new BlockType(5, new AllSideGetter("leaves"), true,true, false).setFaceCull(false);
     public static final BlockType WATER = new WaterBlockType(6);
+    public static final BlockType GLASS = new BlockType(7, new AllSideGetter("glass"), true, true, false);
 
     public static class BlockType {
 

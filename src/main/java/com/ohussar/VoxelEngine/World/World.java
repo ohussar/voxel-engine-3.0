@@ -133,7 +133,9 @@ public class World {
         chunk.prepareMesh();
         chunk.buildMesh();
     }
-
+    public Chunk getChunkFromBPos(Vector3f pos){
+        return getChunkFromBPos(new Vec3i(pos));
+    }
     public Chunk getChunkFromBPos(Vec3i pos){
         int xx = (int) pos.getX();
         int yy = (int) pos.getY();

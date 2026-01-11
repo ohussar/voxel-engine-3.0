@@ -15,6 +15,17 @@ public final class Cube implements IBlockGeometry {
     public static final int SOUTH = 5; // -z
 
 
+    public static final Vector3f[] DIRECTIONS =
+            new Vector3f[]{
+                    new Vector3f(0, 1, 0),
+                    new Vector3f(0, -1, 0),
+                    new Vector3f(1, 0, 0),
+                    new Vector3f(-1, 0, 0),
+                    new Vector3f(0, 0, 1),
+                    new Vector3f(0, 0, -1),
+            };
+
+
     public static Vector3f[] PX_POS = {
 
             new Vector3f(1.0f,1.0f,0.0f),

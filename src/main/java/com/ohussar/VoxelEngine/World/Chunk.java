@@ -104,6 +104,10 @@ public class Chunk {
         assert from != null;
         if(target == null) return false;
         if(from.isTranslucent){
+            if(target.isTranslucent){
+                if(target.equals(from)) return true;
+                return false;
+            }
             return true;
         }else{
             if(target.isTranslucent){
@@ -127,15 +131,26 @@ public class Chunk {
     }
     public void buildTranslucentMesh(){
         translucentMeshData.clear(true);
+        Vector3f actualPlayerPos = Main.player.blockPos;
         faceDistanceList.sort((p1, p2) -> Float.compare(
-                Vector3f.sub(p2.vertex[6], Main.player.position, null).length(),
-                Vector3f.sub(p1.vertex[6], Main.player.position, null).length()
+                Vector3f.sub(p2.vertex[6], actualPlayerPos, null).length(),
+                Vector3f.sub(p1.vertex[6], actualPlayerPos, null).length()
         ));
 
         for(FaceDistance d : faceDistanceList){
-            for(int i = 0; i < 6; i++) {
-                addBlockInfoToData(translucentMeshData, d.vertex[i], d.normals[i], d.tex[i]);
-                translucentMeshData.modelOffsets.add(d.offsets[i]);
+            byte side = d.normals[0]; // should be the same for all faces...
+
+            Vector3f dir = Vector3f.sub(actualPlayerPos, d.vertex[6], null);
+            dir.normalise(dir);
+
+            float dot = Vector3f.dot(dir, Cube.DIRECTIONS[side]);
+            System.out.println(dot);
+            if(dot >= 0) {
+                for (int i = 0; i < 6; i++) {
+                    // dividing by two because i need to compute directions... it is terrible but fuck it
+                    addBlockInfoToData(translucentMeshData, d.vertex[i], (byte) (d.normals[i] / 2), d.tex[i]);
+                    translucentMeshData.modelOffsets.add(d.offsets[i]);
+                }
             }
 
         }
@@ -281,7 +296,6 @@ public class Chunk {
                 }
 
                 if(!sorted) {
-
                     addBigFaceToData(ctx, data, face,  p, b, axis);
                 }else{
 
@@ -292,7 +306,6 @@ public class Chunk {
                         v[i] = d.vertex[i];
                     }
                     v[6] = middle;
-                    v[7] = middle;
                     f.add(new FaceDistance(d.offsets,v, d.normals, d.tex, 0));
                     d=null;
                 }
@@ -384,7 +397,10 @@ public class Chunk {
                 for(int i = 0; i < 6; i++){
                     v[i] = d.vertex[i];
                 }
-                v[6] = new Vector3f(this.position.x * CHUNK_SIZE_X + p.x,  this.position.y * CHUNK_SIZE_Y + p.y, this.position.z * CHUNK_SIZE_Z + p.z);
+                v[6] = new Vector3f(
+                        this.position.x * CHUNK_SIZE_X + p.x + end2.x / 2f,
+                        this.position.y * CHUNK_SIZE_Y + p.y + end2.y / 2f,
+                        this.position.z * CHUNK_SIZE_Z + p.z + end2.z / 2f);
                 v[7] = middle;
                 f.add(new FaceDistance(d.offsets, v, d.normals, d.tex, 0));
                 d=null;
@@ -452,7 +468,7 @@ public class Chunk {
                 pos.y += (endPos.y - block.position.y);
             }
             vertexes[i] = new Vector3f(pos.x, pos.y, pos.z);
-            normals[i] = (byte) (side/2);
+            normals[i] = (byte) (side);
             texes[i] = (byte) block.blockType.textureGetter.getTextureIdForSide(side);
             offsets[i] = block.blockType.geometry.getModelOffsets(context, Vector3f.sub(pos, block.position, null), side);
         }

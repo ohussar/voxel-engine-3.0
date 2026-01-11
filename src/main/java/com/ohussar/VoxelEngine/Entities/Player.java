@@ -18,8 +18,8 @@ public class Player {
     public float speed = 0.035f;
     public Vector3f velocity;
 
-    public Vec3i blockPos;
-    public Vec3i previousBlockPos;
+    public Vector3f blockPos;
+    public Vector3f previousBlockPos;
     public Vector3f[] boundingBox = {
             new Vector3f(0.7f, 0, 0.7f),
             new Vector3f(0.7f, 0, 0.2f),//
@@ -35,8 +35,14 @@ public class Player {
     public Player(Vector3f position){
         this.position = position;
         this.velocity = new Vector3f(0, 0, 0);
-        this.blockPos = new Vec3i((int) Math.floor(position.x), (int) Math.floor(position.y), (int) Math.floor(position.z));
-        this.previousBlockPos = blockPos.copy();
+        this.blockPos = new Vector3f(
+                (float) Math.floor(position.x/64f)*64f,
+                (float) Math.floor(position.y/64f)*64f,
+                (float) Math.floor(position.z/64f)*64f
+
+
+        );
+        this.previousBlockPos = blockPos;
 //        Vector3f[] vert = Cube.NX_POS.clone();
 //        Vector2f[] uvs = Cube.UV.clone();
 //        List<Float> vertC = new ArrayList<>();
@@ -64,7 +70,7 @@ public class Player {
     }
 
     public void tick(World world, Camera camera){
-        previousBlockPos = blockPos.copy();
+        previousBlockPos = new Vector3f( blockPos.x, blockPos.y,  blockPos.z);
         //this.velocity.translate(0, -0.01f, 0);
         if(Keyboard.isKeyDown(GLFW.GLFW_KEY_SPACE) /*&& isGrounded*/){
             this.velocity.y = 0.165f;
@@ -81,9 +87,9 @@ public class Player {
         this.position.translate(this.velocity.x, this.velocity.y, this.velocity.z);
         camera.position = new Vector3f(this.position.x, this.position.y + 1, this.position.z);
 
-        blockPos.setX(Math.round(position.x));
-        blockPos.setY(Math.round(position.y));
-        blockPos.setZ(Math.round(position.z));
+        blockPos.setX((float) Math.floor(position.x*16f)/16f);
+        blockPos.setY((float) Math.floor(position.y*16f)/16f);
+        blockPos.setZ((float) Math.floor(position.z*16f)/16f);
     }
 
     public void collision(World world){
